@@ -6,7 +6,7 @@
     <groupId>com.reljicd</groupId>
     <artifactId>shopping-cart</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>shopping-cart</name>
     <description>Demo project for Spring Boot Shopping Cart</description>
