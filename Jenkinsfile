@@ -26,7 +26,7 @@ pipeline {
         }
         stage('sonarqube Analysis') {
             steps {
-                sh  sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
+                   sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
                    -Dsonar.java.binaries=. \
                    -Dsonar.projectKey=Shopping-Cart '''
             }
