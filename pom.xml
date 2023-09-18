@@ -28,6 +28,12 @@
     <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
     <sonar.language>java</sonar.language>
     </properties>
+    <java.version>17</java.version>
+<dependency>
+    <groupId>javax.xml.bind</groupId>
+    <artifactId>jaxb-api</artifactId>
+    <version>2.3.1</version> <!-- Use the appropriate version -->
+</dependency>
 
     <dependencies>
         <!-- Data JPA -->
