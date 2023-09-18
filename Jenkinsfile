@@ -1,7 +1,7 @@
 pipeline {
     agent any
      tools{
-        jdk  'jdk17'
+        jdk  'java'
         maven  'maven'
     }
     environment{
@@ -24,17 +24,17 @@ pipeline {
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
-        stage('sonarqube Analysis') {
+        stage('sonarqube') {
             steps {
-                   withSonarQubeEnv('sonar') {
-                   sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
-                   -Dsonar.java.binaries=. \
-                   -Dsonar.projectKey=Shopping-Cart '''
+                   withSonarQubeEnv('sonar-server') {
+                     sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
+                     -Dsonar.java.binaries=. \
+                     -Dsonar.projectKey=Shopping-Cart '''
             }
         }
         }     
             stage('build') {
-            steps {
+              steps {
                 sh "mvn package -DskipsTests=true"
             }
         }
