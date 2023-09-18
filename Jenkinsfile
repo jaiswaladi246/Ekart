@@ -1,7 +1,7 @@
 pipeline {
     agent any
      tools{
-        jdk  'java'
+        jdk  'jdk17'
         maven  'maven'
     }
     environment{
@@ -27,12 +27,12 @@ pipeline {
         stage('sonarqube Analysis') {
             steps {
                    withSonarQubeEnv('sonar') {
-                sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
+                   sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
                    -Dsonar.java.binaries=. \
                    -Dsonar.projectKey=Shopping-Cart '''
             }
         }
-    }         
+        }     
             stage('build') {
             steps {
                 sh "mvn package -DskipsTests=true"
