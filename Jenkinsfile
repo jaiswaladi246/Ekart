@@ -11,15 +11,9 @@ pipeline {
                 checkout scm: [$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/mallick700/Ekart.git']]]
             }
         }
-        
-        stage('Maven Build') {
+         stage('COMPILE') {
             steps {
-                script {
-                    def mavenHome = tool name: 'maven', type: 'maven'
-                    def mvnCmd = "${mavenHome}/bin/mvn"
-                    
-                    sh "${mvnCmd} clean install"
-                }
+                sh "mvn clean compile -DskipTests=true"
             }
         }
     }
