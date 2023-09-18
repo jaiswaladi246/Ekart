@@ -37,5 +37,12 @@ pipeline {
                    sh "mvn clean package -DskipTests=true"
             }
         }
+          stage('Deploy To Nexus') {
+              steps {
+                  withMaven(globalMavenSettingsConfig: 'global-settings') {
+                  sh "mvn clean package -DskipTests=true"
+              }
+          }
+          }
     }
 }
