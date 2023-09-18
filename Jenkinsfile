@@ -44,25 +44,24 @@ pipeline {
               }
           }
           }
-           stage('Build and Tag Docker Image') {
-              steps {
-                  script {
-                  withDockerRegistry(credentialsId: 'docker-cred') {
-                    sh " docker build -t shopping-cart:dev -f docker/Dockerfile . "
-                    sh "docker tag shopping-cart:dev mallick700/shopping-cart:dev"
+          stage('Build and Tag Docker Image') {
+    steps {
+        script {
+            withDockerRegistry(credentialsId: 'docker-cred') {
+                sh "docker build -t shopping-cart:dev -f docker/Dockerfile ."
+                sh "docker tag shopping-cart:dev mallick700/shopping-cart:dev"
             }
-         }
-      }
+        }
     }
-                    stage('Push Docker Image') {
-                      steps {
-                         script {  
-                             withDockerRegistry(credentialsId: 'docker-cred') {
-                             sh " docker push mallick700/shopping-cart:dev "
-                             }
-                         }
-                      }
-     
-                  }
-             }
+}
+
+stage('Push Docker Image') {
+    steps {
+        script {
+            withDockerRegistry(credentialsId: 'docker-cred') {
+                sh "docker push mallick700/shopping-cart:dev"
+            }
+        }
     }
+}
+
