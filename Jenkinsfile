@@ -26,12 +26,14 @@ pipeline {
         }
         stage('sonarqube Analysis') {
             steps {
-                   sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
+                   withSonarQubeEnv('sonar') {
+                sh ''' $SCANNER_HOME/bin/sonar -Dsonar.projectName=Shopping-Cart \
                    -Dsonar.java.binaries=. \
                    -Dsonar.projectKey=Shopping-Cart '''
             }
         }
-         stage('build') {
+    }         
+            stage('build') {
             steps {
                 sh "mvn package -DskipsTests=true"
             }
