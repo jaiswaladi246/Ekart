@@ -48,7 +48,7 @@ pipeline {
     steps {
         script {
             withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                sh " docker build -t shopping-cart:dev -f docker/Dockerfile "
+                sh " docker build -t shopping-cart:dev -f docker/Dockerfile . "
                 sh "docker tag shopping-cart:dev mallick700/shopping-cart:dev"
             }
         }
