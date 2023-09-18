@@ -68,7 +68,7 @@ stage('Push Docker Image') {
     steps {
         script {
            withDockerRegistry(credentialsId: 'docker-credd', toolName: 'docker') {
-                sh "docker run -d --name ekartApp -p 8090:8090 mallick700/shopping-cart:dev"
+                sh "docker run -d --name shoppingapp -p 8090:8090 mallick700/shopping-cart:dev"
             }
         }
     }
