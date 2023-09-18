@@ -47,7 +47,7 @@ pipeline {
           stage('Build and Tag Docker Image') {
     steps {
         script {
-            withDockerRegistry(credentialsId: 'docker-cred') {
+            withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
                 sh "docker build -t shopping-cart:dev -f docker/Dockerfile ."
                 sh "docker tag shopping-cart:dev mallick700/shopping-cart:dev"
             }
@@ -58,7 +58,7 @@ pipeline {
 stage('Push Docker Image') {
     steps {
         script {
-            withDockerRegistry(credentialsId: 'docker-cred') {
+           withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
                 sh "docker push mallick700/shopping-cart:dev"
             }
         }
