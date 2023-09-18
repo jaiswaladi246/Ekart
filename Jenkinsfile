@@ -64,6 +64,17 @@ stage('Push Docker Image') {
         }
     }
 }
+ stage('Deploy Application') {
+    steps {
+        script {
+           withDockerRegistry(credentialsId: 'docker-credd', toolName: 'docker') {
+                sh "docker run -d --name ekart -p 8070:8070 mallick700/shopping-cart:dev"
+            }
+        }
+    }
 }
+     
+ 
+    }
 
 }
