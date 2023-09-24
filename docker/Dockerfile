@@ -4,7 +4,7 @@ EXPOSE 8090
 
 ENV APP_HOME /usr/src/app
 
-COPY target/shopping-cart-0.0.1-SNAPSHOT.jar $APP_HOME/app.jar
+COPY target/shopping-cart-0.0.1.jar $APP_HOME/app.jar
 
 WORKDIR $APP_HOME
 
