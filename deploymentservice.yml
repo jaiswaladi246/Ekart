@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: ekart
-          image: adijaiswal/cicddevops:6 # Image that will be used to containers in the cluster
+          image: adijaiswal/ekart:latest # Image that will be used to containers in the cluster
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8070 # The port that the container is running on in the cluster
