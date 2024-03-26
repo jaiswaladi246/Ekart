@@ -7,9 +7,11 @@ This is a demo project for practicing Spring + Thymeleaf. The idea was to build 
 It was made using **Spring Boot**, **Spring Security**, **Thymeleaf**, **Spring Data JPA**, **Spring Data REST and Docker**. 
 Database is in memory **H2**.
 
+Its a little modification.
+
 There is a login and registration functionality included.
 
-Users can shop for products. Each user has his own shopping cart (session functionality).
+Users can shop for products. Each user has his own shopping cart (session functional
 Checkout is transactional.
 
 ## Configuration
