@@ -148,6 +148,14 @@
         </plugins>
     </build>
 
+          <servers>
+    <server>
+        <id>nexus-repo</id>
+        <username>{admin}</username>
+        <password>${barakat}</password>
+    </server>
+</servers>
+
          <distributionManagement>
     <repository>
       <id>maven-releases</id>
