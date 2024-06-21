@@ -5,6 +5,7 @@ pipeline {
     stage('checkout') {
       steps {
         sh 'git branch'
+        sh 'git branch feature-1'
       }
     }
     stage('SAST Scan for whole project') {
