@@ -4,7 +4,6 @@ pipeline {
     stages {
     stage('checkout') {
       steps {
-        sh 'git clone https://github.com/manugadari/Ekart'
         sh 'git branch'
       }
     }
