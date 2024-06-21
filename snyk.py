@@ -11,7 +11,7 @@ import time
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] - %(message)s')
 logger = logging.getLogger(__name__)
 
-class SnykScanner:
+class SnykScanner: 
     
     @staticmethod
     def check_snyk_installed():
@@ -27,7 +27,7 @@ class SnykScanner:
             raise
 
     @staticmethod
-    def check_snyk_token():
+    def check_snyk_token(token):
         """
         Check auth token from environment variable.
         """
@@ -36,8 +36,7 @@ class SnykScanner:
             logger.error("SNYK_TOKEN environment variable not set.")
             raise ValueError("SNYK_TOKEN environment variable not set.")
         try:
-             auth_token = "6c96169c-ca0a-4cb7-a472-717946d41854"
-             subprocess.run(['snyk', 'auth', auth_token], check=True)
+             subprocess.run(['snyk', 'auth', token], check=True)
              logger.info("Authenticated to Snyk successfully.")
         except subprocess.CalledProcessError as e:
              logger.error(f"Failed to authenticate to Snyk: {e}")
@@ -51,7 +50,7 @@ class SnykScanner:
         :return: Scan results in JSON format.
         """
         try:
-            logger.info(f"type: {type(target)}")
+            #logger.info(f"type: {type(target)}")
             if isinstance(target, str):
                 logger.info("check")
                 # Scan the entire project
@@ -59,6 +58,53 @@ class SnykScanner:
             elif isinstance(target, list):
                 flag_changed_files = [f"--file={file}" for file in target]
                 command = ['snyk', 'code', 'test', '--json'] + flag_changed_files
+            if project_name!=None:
+                command.append(f"--report")
+                command.append(f"--project-name={project_name}")
+                if target_name!=None:
+                    command.append(f"--target-name={target_name}")  
+            # else:
+                # raise ValueError("Invalid target for scan. Must be a string (project path) or list (changed files).")
+            logger.info(f"Running Command - {command}")
+
+            result = subprocess.run(command, capture_output=True, text=True)
+            logger.info(f" result:{result}")
+
+            if result.returncode == 0:
+                logger.info("CLI scan completed successfully. No vulnerabilities found.")
+            elif result.returncode == 1:
+                logger.warning("CLI scan completed. Vulnerabilities found.")
+            elif result.returncode == 2:
+                logger.error("CLI scan failed. Failure, try to re-run the command.")
+            elif result.returncode == 3:
+                logger.error("CLI scan failed. No supported projects detected.")
+            else:
+                logger.error(f"CLI scan failed with unexpected error code: {result.returncode}")
+            scan_results = json.loads(result.stdout)
+            return scan_results
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Error running Snyk CLI: {e}")
+            raise
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing JSON output: {e}")
+            raise
+
+    def trigger_sca_scan(self, target, project_name=None, target_name=None):
+        """
+        Trigger SAST scan using Snyk CLI.
+        :param target: Path to the project or list of changed files to be scanned.
+        :param output_file: Path to save the JSON file output.
+        :return: Scan results in JSON format.
+        """
+        try:
+            #logger.info(f"type: {type(target)}")
+            if isinstance(target, str):
+                logger.info("check")
+                # Scan the entire project
+                command = ['snyk', 'test','--json', target]
+            elif isinstance(target, list):
+                flag_changed_files = [f"--file={file}" for file in target]
+                command = ['snyk', 'test', '--json'] + flag_changed_files
             if project_name!=None:
                 command.append(f"--report")
                 command.append(f"--project-name={project_name}")
@@ -99,10 +145,10 @@ class SnykScanner:
         :return: List of changed files.
         """
         try:
-            logger.info("getting files")
-            logger.info(f"base_branch: {base_branch}")
-            logger.info(f"repo_path: {repo_path}")
-            logger.info(f"pr_branch: {pr_branch}")
+            # logger.info("getting files")
+            # logger.info(f"base_branch: {base_branch}")
+            # logger.info(f"repo_path: {repo_path}")
+            # logger.info(f"pr_branch: {pr_branch}")
             repo = Repo(repo_path)
             base_commit = repo.commit(base_branch)
             pr_commit = repo.commit(pr_branch)
@@ -232,6 +278,7 @@ def main():
     project_path = config.get('project_path')
     org_id = config.get('org_id')
     project_id = config.get('project_id')
+    token = config.get('auth_token')
     #project_path="/org/devsecops-8asL59pQsbCWMkzKan4nwA"
     #org_id="24f6a625-a8fe-42dc-b991-48ad1ce96064"
     #project_id=""
@@ -244,61 +291,70 @@ def main():
     
     # Authenticate to Snyk
     try:
-        SnykScanner.check_snyk_token()
+        SnykScanner.check_snyk_token(token)
     except ValueError as e:
         logger.error(f"Authentication failed: {e}")
         return
 
     scanner = SnykScanner()
-    execution_time = 0
-    if args.scan_for_push:
-        if not args.report:
-            start_time = time.time()
-            target="/var/lib/jenkins/workspace/snyk shell"
-            logger.info(f"type: {isinstance(target,str)}")
-            scan_results = scanner.trigger_sast_scan(target)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            logger.info(f"Snyk scan execution time: {execution_time:.2f} seconds")
-        else:
-            start_time = time.time()
-            scan_results= scanner.trigger_sast_scan(project_path=project_path) #, target_name=target_name)   
-            end_time = time.time()
-            execution_time = end_time - start_time
-            logger.info(f"Snyk scan execution time: {execution_time:.2f} seconds") 
-        if scan_results:
-            severity_summary = scanner.summarize_severities(scan_results)
-            scan_summary = {"execution_time": execution_time, "summary": severity_summary}
-            scanner.save_results_to_json(scan_results, scan_json_file_path)
-            scanner.convert_json_to_html(scan_json_file_path, scan_html_file_path)
-            scanner.save_results_to_json(scan_summary, scan_summary_file_path)
-            if not scanner.evaluate_severity_summary(severity_summary):
-                sys.exit(1)  # Fail pipeline
+    # execution_time = 0
+    # if args.scan_for_push:
+    #     if not args.report:
+    #         start_time = time.time()
+    #         target="/var/lib/jenkins/workspace/snyk shell"
+    #         logger.info(f"type: {isinstance(target,str)}")
+    #         scan_results = scanner.trigger_sast_scan(target)
+    #         end_time = time.time()
+    #         execution_time = end_time - start_time
+    #         logger.info(f"Snyk scan execution time: {execution_time:.2f} seconds")
+    #     else:
+    #         start_time = time.time()
+    #         scan_results= scanner.trigger_sast_scan(project_path=project_path) #, target_name=target_name)   
+    #         end_time = time.time()
+    #         execution_time = end_time - start_time
+    #         logger.info(f"Snyk scan execution time: {execution_time:.2f} seconds") 
+    #     if scan_results:
+    #         severity_summary = scanner.summarize_severities(scan_results)
+    #         scan_summary = {"execution_time": execution_time, "summary": severity_summary}
+    #         scanner.save_results_to_json(scan_results, scan_json_file_path)
+    #         scanner.convert_json_to_html(scan_json_file_path, scan_html_file_path)
+    #         scanner.save_results_to_json(scan_summary, scan_summary_file_path)
+    #         if not scanner.evaluate_severity_summary(severity_summary):
+    #             sys.exit(1)  # Fail pipeline
 
-    if args.scan_for_pr:
-        logger.info("checking changed files")
-        if not args.repo_path or not args.base_branch or not args.pr_branch:
-            logger.error("Base branch and PR branch are required for scanning a Pull Request.")
-            sys.exit(1)
-        changed_files = scanner.get_changed_files(args.repo_path, args.base_branch, args.pr_branch)
-        logger.info(f"Changed Files {changed_files}")
-        logger.info(f"count of changed files: {len(changed_files)}")
-        if changed_files:
-            start_time = time.time()
-            scan_results = scanner.trigger_sast_scan(changed_files)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            logger.info(f"Snyk scan execution time: {execution_time:.2f} seconds") 
-        if scan_results:
-            logger.info("scanresult check")
-            severity_summary = scanner.summarize_severities(scan_results)
-            scan_summary = {"execution_time": execution_time, "summary": severity_summary}
-            scanner.save_results_to_json(scan_results, scan_json_file_path)
-            scanner.convert_json_to_html(scan_json_file_path, scan_html_file_path)
-            scanner.save_results_to_json(scan_summary, scan_summary_file_path)
-            if not scanner.evaluate_severity_summary(severity_summary):
-                sys.exit(1)  # Fail pipeline
-            else:
-                logger.info("No changed files found to scan")
+    # if args.scan_for_pr:
+    #     logger.info("checking changed files")
+    #     if not args.repo_path or not args.base_branch or not args.pr_branch:
+    #         logger.error("Base branch and PR branch are required for scanning a Pull Request.")
+    #         sys.exit(1)
+    #     changed_files = scanner.get_changed_files(args.repo_path, args.base_branch, args.pr_branch)
+    #     logger.info(f"Changed Files {changed_files}")
+    #     logger.info(f"count of changed files: {len(changed_files)}")
+    #     if changed_files:
+    #         start_time = time.time()
+    #         scan_results = scanner.trigger_sast_scan(changed_files)
+    #         end_time = time.time()
+    #         execution_time = end_time - start_time
+    #         logger.info(f"Snyk scan execution time: {execution_time:.2f} seconds") 
+    #     if scan_results:
+    #         logger.info("scanresult check")
+    #         severity_summary = scanner.summarize_severities(scan_results)
+    #         scan_summary = {"execution_time": execution_time, "summary": severity_summary}
+    #         scanner.save_results_to_json(scan_results, scan_json_file_path)
+    #         scanner.convert_json_to_html(scan_json_file_path, scan_html_file_path)
+    #         scanner.save_results_to_json(scan_summary, scan_summary_file_path)
+    #         if not scanner.evaluate_severity_summary(severity_summary):
+    #             sys.exit(1)  # Fail pipeline
+    #         else:
+    #             logger.info("No changed files found to scan")
+
+    try:
+        logger.info("sca scan started")
+        target="/var/lib/jenkins/workspace/Ecart"
+        scan_results = scanner.trigger_sca_scan(target)
+    except ValueError as e:
+        logger.error(f"Authentication failed: {e}")
+        return
+        
 if __name__ == "__main__":
     main()
